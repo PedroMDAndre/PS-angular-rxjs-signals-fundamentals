@@ -9,7 +9,7 @@ import {
 import { NgIf, NgFor, CurrencyPipe } from '@angular/common';
 import { Product } from '../product';
 import { ProductService } from '../product.service';
-import { first, tap } from 'rxjs';
+import { catchError, EMPTY, first, tap } from 'rxjs';
 
 @Component({
   selector: 'pm-product-detail',
@@ -29,7 +29,7 @@ export class ProductDetailComponent implements OnChanges {
     ? `Product Detail for: ${this.product.productName}`
     : 'Product Detail';
 
-  private productService = inject(ProductService);
+  private readonly productService = inject(ProductService);
 
   ngOnChanges(changes: SimpleChanges): void {
     const id = changes['productId'].currentValue;
@@ -39,7 +39,11 @@ export class ProductDetailComponent implements OnChanges {
         .getProduct(id)
         .pipe(
           first(),
-          tap((product) => (this.product = product))
+          tap((product) => (this.product = product)),
+          catchError((error) => {
+            this.errorMessage = error;
+            return EMPTY;
+          })
         )
         .subscribe();
     }

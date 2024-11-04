@@ -4,7 +4,7 @@ import { NgIf, NgFor, NgClass } from '@angular/common';
 import { Product } from '../product';
 import { ProductDetailComponent } from '../product-detail/product-detail.component';
 import { ProductService } from '../product.service';
-import { Subject, takeUntil, tap } from 'rxjs';
+import { catchError, EMPTY, Subject, takeUntil, tap } from 'rxjs';
 
 @Component({
   selector: 'pm-product-list',
@@ -16,8 +16,8 @@ export class ProductListComponent implements OnInit, OnDestroy {
   pageTitle = 'Products';
   errorMessage = '';
 
-  private productService = inject(ProductService);
-  private destroySubject: Subject<void> = new Subject();
+  private readonly productService = inject(ProductService);
+  private readonly destroySubject: Subject<void> = new Subject();
 
   // Products
   products: Product[] = [];
@@ -33,6 +33,10 @@ export class ProductListComponent implements OnInit, OnDestroy {
           console.log('In component pipeline');
           this.products = products;
           console.log(this.products);
+        }),
+        catchError((error) => {
+          this.errorMessage = error;
+          return EMPTY;
         }),
         takeUntil(this.destroySubject)
       )
