@@ -1,52 +1,32 @@
-import { Component, inject, OnDestroy, OnInit } from '@angular/core';
+import { Component, inject } from '@angular/core';
 
-import { NgIf, NgFor, NgClass } from '@angular/common';
-import { Product } from '../product';
+import { NgIf, NgFor, NgClass, AsyncPipe } from '@angular/common';
 import { ProductDetailComponent } from '../product-detail/product-detail.component';
 import { ProductService } from '../product.service';
-import { catchError, EMPTY, Subject, takeUntil, tap } from 'rxjs';
+import { catchError, EMPTY } from 'rxjs';
 
 @Component({
   selector: 'pm-product-list',
   templateUrl: './product-list.component.html',
   standalone: true,
-  imports: [NgIf, NgFor, NgClass, ProductDetailComponent],
+  imports: [AsyncPipe, NgIf, NgFor, NgClass, ProductDetailComponent],
 })
-export class ProductListComponent implements OnInit, OnDestroy {
+export class ProductListComponent {
   pageTitle = 'Products';
   errorMessage = '';
 
   private readonly productService = inject(ProductService);
-  private readonly destroySubject: Subject<void> = new Subject();
-
-  // Products
-  products: Product[] = [];
 
   // Selected product id to highlight the entry
   selectedProductId: number = 0;
 
-  ngOnInit(): void {
-    this.productService
-      .getProducts()
-      .pipe(
-        tap((products) => {
-          console.log('In component pipeline');
-          this.products = products;
-          console.log(this.products);
-        }),
-        catchError((error) => {
-          this.errorMessage = error;
-          return EMPTY;
-        }),
-        takeUntil(this.destroySubject)
-      )
-      .subscribe();
-  }
-
-  ngOnDestroy(): void {
-    this.destroySubject.next();
-    this.destroySubject.complete();
-  }
+  // Products
+  readonly products$ = this.productService.products$.pipe(
+    catchError((error) => {
+      this.errorMessage = error;
+      return EMPTY;
+    })
+  );
 
   onSelected(productId: number): void {
     this.selectedProductId = productId;
