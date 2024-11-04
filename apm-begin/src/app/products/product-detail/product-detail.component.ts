@@ -1,12 +1,6 @@
-import {
-  Component,
-  inject,
-  Input,
-  OnChanges,
-  SimpleChanges,
-} from '@angular/core';
+import { Component, inject, Input } from '@angular/core';
 
-import { NgIf, NgFor, CurrencyPipe } from '@angular/common';
+import { NgIf, NgFor, CurrencyPipe, AsyncPipe } from '@angular/common';
 import { Product } from '../product';
 import { ProductService } from '../product.service';
 import { catchError, EMPTY, first, tap } from 'rxjs';
@@ -15,39 +9,26 @@ import { catchError, EMPTY, first, tap } from 'rxjs';
   selector: 'pm-product-detail',
   templateUrl: './product-detail.component.html',
   standalone: true,
-  imports: [NgIf, NgFor, CurrencyPipe],
+  imports: [AsyncPipe, NgIf, NgFor, CurrencyPipe],
 })
-export class ProductDetailComponent implements OnChanges {
-  @Input() productId: number = 0;
+export class ProductDetailComponent {
   errorMessage = '';
-
-  // Product to display
-  product: Product | null = null;
-
-  // Set the page title
-  pageTitle = this.product
-    ? `Product Detail for: ${this.product.productName}`
-    : 'Product Detail';
 
   private readonly productService = inject(ProductService);
 
-  ngOnChanges(changes: SimpleChanges): void {
-    const id = changes['productId'].currentValue;
+  // Product to display
+  readonly product$ = this.productService.product$.pipe(
+    catchError((error) => {
+      this.errorMessage = error;
+      return EMPTY;
+    })
+  );
 
-    if (id) {
-      this.productService
-        .getProduct(id)
-        .pipe(
-          first(),
-          tap((product) => (this.product = product)),
-          catchError((error) => {
-            this.errorMessage = error;
-            return EMPTY;
-          })
-        )
-        .subscribe();
-    }
-  }
+  // Set the page title
+  // pageTitle = this.product
+  //   ? `Product Detail for: ${this.product.productName}`
+  //   : 'Product Detail';
+  pageTitle = 'Product Detail';
 
   addToCart(product: Product) {}
 }

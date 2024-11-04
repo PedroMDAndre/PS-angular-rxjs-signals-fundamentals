@@ -18,7 +18,7 @@ export class ProductListComponent {
   private readonly productService = inject(ProductService);
 
   // Selected product id to highlight the entry
-  selectedProductId: number = 0;
+  readonly selectedProductId$ = this.productService.productSelected$;
 
   // Products
   readonly products$ = this.productService.products$.pipe(
@@ -29,6 +29,6 @@ export class ProductListComponent {
   );
 
   onSelected(productId: number): void {
-    this.selectedProductId = productId;
+    this.productService.productSelected(productId);
   }
 }
