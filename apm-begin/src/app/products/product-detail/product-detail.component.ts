@@ -1,37 +1,31 @@
-import { Component, inject, Input } from '@angular/core';
+import { Component, computed, inject } from '@angular/core';
 
-import { NgIf, NgFor, CurrencyPipe, AsyncPipe } from '@angular/common';
+import { NgIf, NgFor, CurrencyPipe } from '@angular/common';
 import { Product } from '../product';
 import { ProductService } from '../product.service';
-import { catchError, EMPTY, first, tap } from 'rxjs';
 import { CartService } from '../../cart/cart.service';
 
 @Component({
   selector: 'pm-product-detail',
   templateUrl: './product-detail.component.html',
   standalone: true,
-  imports: [AsyncPipe, NgIf, NgFor, CurrencyPipe],
+  imports: [NgIf, NgFor, CurrencyPipe],
 })
 export class ProductDetailComponent {
-  errorMessage = '';
-
   private readonly productService = inject(ProductService);
   private readonly cartService = inject(CartService);
 
-
   // Product to display
-  readonly product$ = this.productService.product$.pipe(
-    catchError((error) => {
-      this.errorMessage = error;
-      return EMPTY;
-    })
-  );
+  readonly product = this.productService.product;
+  readonly errorMessage = this.productService.productError;
 
   // Set the page title
-  // pageTitle = this.product
-  //   ? `Product Detail for: ${this.product.productName}`
-  //   : 'Product Detail';
-  pageTitle = 'Product Detail';
+
+  readonly pageTitle = computed(() =>
+    this.product()
+      ? `Product Detail for: ${this.product()?.productName}`
+      : 'Product Detail'
+  );
 
   addToCart(product: Product) {
     this.cartService.addItem(product);

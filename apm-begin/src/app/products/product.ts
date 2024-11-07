@@ -1,4 +1,4 @@
-import { Review } from "../reviews/review";
+import { Review } from '../reviews/review';
 
 /* Defines the product entity */
 export interface Product {
